@@ -33,7 +33,7 @@
   <div id="header-outer" class="outer">
     <div id="header-title" class="inner">
       <h1 id="logo-wrap">
-        <a href="/" id="logo">Beitzel.org</a>
+        <a href="/" id="logo" style="font-size: 2em;color:#ddd">Beitzel.org</a>
       </h1>
       
     </div>
@@ -59,6 +59,56 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-Edge-Filter-using-F-and-Accord-NET" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2016/11/23/Edge-Filter-using-F-and-Accord-NET/" class="article-date">
+  <time datetime="2016-11-23T12:56:08.000Z" itemprop="datePublished">2016-11-23</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2016/11/23/Edge-Filter-using-F-and-Accord-NET/">Edge Filter using F# and Accord.NET</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>This is a sample of how to apply edge filters to a set of images using <a href="http://fsharp.org/" target="_blank" rel="external">F#</a> and <a href="http://accord-framework.net/" target="_blank" rel="external">Accord.NET</a>.  The framework provides several <a href="http://accord-framework.net/docs/html/N_Accord_Imaging_Filters.htm" target="_blank" rel="external">Filters</a> for image manipulating.  Since I’m interested in edge enhancement I’ll limit my scope to those filters.  In particular I’ve selected the <code>DifferenceEdgeDetector()</code>.</p>
+<p>Using <a href="https://github.com/fsprojects/Paket" target="_blank" rel="external">Paket</a>, here is a sample <code>paket.dependencies</code> file.</p>
+<figure class="highlight fsharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">source https:<span class="comment">//nuget.org/api/v2</span></div><div class="line">nuget Accord</div><div class="line">nuget Accord.Imaging</div></pre></td></tr></table></figure>
+<p>This is the boring setup stuff.  </p>
+<figure class="highlight fsharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// Ref: http://accord-framework.net/docs/html/N_Accord_Imaging_Filters.htm</span></div><div class="line"></div><div class="line">#i <span class="string">"../packages"</span></div><div class="line">#r <span class="string">"../packages/Accord/lib/net45/accord.dll"</span></div><div class="line">#r <span class="string">"../packages/Accord.Imaging/lib/net45/accord.imaging.dll"</span></div><div class="line"></div><div class="line"><span class="keyword">open</span> System</div><div class="line"><span class="keyword">open</span> System.Drawing</div><div class="line"><span class="keyword">open</span> System.Drawing.Imaging</div><div class="line"><span class="keyword">open</span> System.IO</div><div class="line"><span class="keyword">open</span> Accord</div><div class="line"><span class="keyword">open</span> Accord.Imaging</div><div class="line"><span class="keyword">open</span> Accord.Imaging.Filters</div><div class="line"></div><div class="line"><span class="keyword">let</span> imageRoot = Path.GetFullPath(Path.Combine(__SOURCE_DIRECTORY__, <span class="string">"../data/"</span>))</div><div class="line"><span class="keyword">let</span> resultsRoot = Path.GetFullPath(Path.Combine(__SOURCE_DIRECTORY__, <span class="string">"../data/results/"</span>))</div></pre></td></tr></table></figure>
+<p>Loading and applying the filter is straight-forward.  The only additional point worthy of mention is that most of the edge filters require the image to be in grayscale.  That conversion is included in this function.</p>
+<figure class="highlight fsharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// Process image and save a result file with edge filter applied</span></div><div class="line"><span class="keyword">let</span> filterImage (resultsDir:string) (imageName:string) =</div><div class="line">    <span class="keyword">let</span> resultImageName = Path.Combine(resultsDir, Path.GetFileName(imageName))        </div><div class="line">    <span class="keyword">let</span> bitmap = <span class="keyword">new</span> Bitmap(imageName)</div><div class="line"></div><div class="line">    <span class="comment">// Need to reduce to grayscale, filter needs a reduced color bitmap to process</span></div><div class="line">    <span class="keyword">let</span> bitmapGray = Grayscale.CommonAlgorithms.BT709.Apply(bitmap)</div><div class="line">    <span class="keyword">let</span> filter = <span class="keyword">new</span> DifferenceEdgeDetector()</div><div class="line"></div><div class="line">    filter.ApplyInPlace(bitmapGray)</div><div class="line"></div><div class="line">    File.Delete resultImageName</div><div class="line">    bitmapGray.Save(resultImageName)</div></pre></td></tr></table></figure>
+<p>The below code gets a list of qualifying images, then sends them through the filtering function.</p>
+<figure class="highlight fsharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// Is file an image file?</span></div><div class="line"><span class="keyword">let</span> isImageFile (fileName:string) = </div><div class="line">    fileName.EndsWith(<span class="string">".jpg"</span>, StringComparison.OrdinalIgnoreCase)</div><div class="line">    || fileName.EndsWith(<span class="string">".png"</span>, StringComparison.OrdinalIgnoreCase)</div><div class="line"></div><div class="line"><span class="comment">// Get Image list to process</span></div><div class="line"><span class="keyword">let</span> imageNames = </div><div class="line">    Directory.GetFiles imageRoot </div><div class="line">    |&gt; Array.filter isImageFile</div><div class="line"></div><div class="line"><span class="comment">// Process images</span></div><div class="line">imageNames </div><div class="line">|&gt; Array.iter (filterImage resultsRoot)</div></pre></td></tr></table></figure>
+<p>Below is an example of the edge filter applied.</p>
+<p><img src="/images/edges_before.jpg" alt="Before"></p>
+<p><img src="/images/edges_after.jpg" alt="After"></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://beitzel.org/2016/11/23/Edge-Filter-using-F-and-Accord-NET/" data-id="civv2elag00000slizx0zedg7" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Accord-NET/">Accord.NET</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/F/">F#</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Images/">Images</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-Face-Detection-with-FSharp-and-Accord-NET" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2016/11/21/Face-Detection-with-FSharp-and-Accord-NET/" class="article-date">
@@ -81,7 +131,7 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>This is a quick experiment using <a href="http://fsharp.org/" target="_blank" rel="external">F#</a> and <a href="http://accord-framework.net/" target="_blank" rel="external">Accord.NET</a> to do face detection.  The method uses the provided Haar-like feature detection.  The results aren’t particularly good, but for little effort it’s an ok start.  At a minimum, it does reasonably well at detecting potential regions of interest.  For the test images, the best improvements were found when constraining the min/max range based on the known sizes of faces in the pictures.</p>
+        <p>This is a quick sample using <a href="http://fsharp.org/" target="_blank" rel="external">F#</a> and <a href="http://accord-framework.net/" target="_blank" rel="external">Accord.NET</a> to do face detection.  The method uses the provided Haar-like feature detection.  The results aren’t particularly good, but for little effort it’s an ok start.  At a minimum, it does reasonably well at detecting potential regions of interest.  For the test images, the best improvements were found when constraining the min/max range based on the known sizes of faces in the pictures.</p>
 <p>Using <a href="https://github.com/fsprojects/Paket" target="_blank" rel="external">Paket</a>, here is a sample <code>paket.dependencies</code> file.</p>
 <figure class="highlight fsharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">source https:<span class="comment">//nuget.org/api/v2</span></div><div class="line">nuget Accord</div><div class="line">nuget Accord.Math</div><div class="line">nuget Accord.Statistics</div><div class="line">nuget Accord.MachineLearning</div><div class="line">nuget Accord.Vision</div><div class="line">nuget Accord.Imaging</div></pre></td></tr></table></figure>
 <p>This is the boring setup stuff.  </p>
@@ -99,10 +149,10 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://beitzel.org/2016/11/21/Face-Detection-with-FSharp-and-Accord-NET/" data-id="civspbyiq00000kliql2063tf" class="article-share-link">Share</a>
+      <a data-url="http://beitzel.org/2016/11/21/Face-Detection-with-FSharp-and-Accord-NET/" data-id="civv2elam00010sli652skl26" class="article-share-link">Share</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Accord-NET/">Accord.NET</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Computer-Vision/">Computer Vision</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/F/">F#</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Machine-Learning/">Machine Learning</a></li></ul>
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Accord-NET/">Accord.NET</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Computer-Vision/">Computer Vision</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/F/">F#</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Images/">Images</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Machine-Learning/">Machine Learning</a></li></ul>
 
     </footer>
   </div>
@@ -120,7 +170,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/tags/Accord-NET/" style="font-size: 10px;">Accord.NET</a> <a href="/tags/Computer-Vision/" style="font-size: 10px;">Computer Vision</a> <a href="/tags/F/" style="font-size: 10px;">F#</a> <a href="/tags/Machine-Learning/" style="font-size: 10px;">Machine Learning</a>
+      <a href="/tags/Accord-NET/" style="font-size: 20px;">Accord.NET</a> <a href="/tags/Computer-Vision/" style="font-size: 10px;">Computer Vision</a> <a href="/tags/F/" style="font-size: 20px;">F#</a> <a href="/tags/Images/" style="font-size: 20px;">Images</a> <a href="/tags/Machine-Learning/" style="font-size: 10px;">Machine Learning</a>
     </div>
   </div>
 
