@@ -13,7 +13,7 @@ Using Pak">
 <meta property="og:site_name" content="Beitzel.org">
 <meta property="og:description" content="This is part 2 of my attempt to use an Accord.NET Decision Tree to classify Lego set themes using F#.  Just as a reminder, the original data source is Rebrickable.  You can find Part 1 here.
 Using Pak">
-<meta property="og:updated_time" content="2016-12-08T03:09:28.583Z">
+<meta property="og:updated_time" content="2016-12-08T23:47:44.358Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Decision Trees with F# and Accord.NET (Part 2)">
 <meta name="twitter:description" content="This is part 2 of my attempt to use an Accord.NET Decision Tree to classify Lego set themes using F#.  Just as a reminder, the original data source is Rebrickable.  You can find Part 1 here.
@@ -66,9 +66,9 @@ ga('send', 'pageview');
       </nav>
       <nav id="sub-nav">
         
-          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="Flux RSS"></a>
         
-        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+        <a id="nav-search-btn" class="nav-icon" title="Rechercher"></a>
       </nav>
       <div id="search-form-wrap">
         <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" results="0" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://beitzel.org"></form>
@@ -118,13 +118,16 @@ ga('send', 'pageview');
 <figure class="highlight fsharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// Build the decision tree from training data</span></div><div class="line"><span class="keyword">let</span> tree = <span class="keyword">new</span> DecisionTree(decisionVariablesIList trainInputs, numClasses (Array.map int trainOutputs))</div><div class="line"></div><div class="line"><span class="comment">// Train the tree</span></div><div class="line"><span class="keyword">let</span> c45 = <span class="keyword">new</span> C45Learning(tree)</div><div class="line"></div><div class="line"><span class="keyword">let</span> error = c45.Learn(trainInputs, (Array.map int trainOutputs))</div></pre></td></tr></table></figure>
 <p>Once the tree is trained, I apply the results to the train and test sets and then display the results.</p>
 <figure class="highlight fsharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="comment">// Process train and test results</span></div><div class="line"><span class="keyword">let</span> (trainResults, trainTotalCorrect) = processResults tree trainInputs (Array.map int trainOutputs)    </div><div class="line"><span class="keyword">let</span> (testResults, testTotalCorrect) = processResults tree testInputs (Array.map int testOutputs)</div><div class="line"></div><div class="line"><span class="comment">// Final display of results</span></div><div class="line">showResults <span class="string">"Train"</span> trainTotalCorrect (Array.length trainInputs)</div><div class="line">showResults <span class="string">"Test "</span> testTotalCorrect (Array.length testInputs)</div></pre></td></tr></table></figure>
-<p>Below are the results.  They are disappointing, and there is certainly room for improvement.  But its a start. Hopefully this has offered some insight into how to use a decision tree in Accord.NET.  Until next time…</p>
+<p>Below are the results.  They are disappointing, and there is certainly room for improvement.  But its a start. </p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">Train - Direct row match  : Correct 5624/7584 (0.742)</div><div class="line">Test  - Direct row match  : Correct 1342/3250 (0.413)</div></pre></td></tr></table></figure>
+<p>On a whim I attempt to use the ID3 learner instead.  This method requires discrete values.  It’s easy enough to convert all the doubles to ints.  Knowing that most of my columns are percentages, I multiple by 100, then convert to an int.  Unfortunantly, my system ran out of memory on this test.  I used fsharpi (Mono) as well as fsi (.NET CLR), but it gave me the same issue.  This deserves some additional follow-up, but I don’t have time for that rabbit-hole right now.  Below is the code I used to try the ID3 learner, if someone sees what is wrong, feel free to drop me a line.</p>
+<figure class="highlight fsharp"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div></pre></td><td class="code"><pre><div class="line"></div><div class="line"><span class="comment">// Below is the hacked up ID3 variant of my test</span></div><div class="line"></div><div class="line"><span class="keyword">let</span> newRangeFromColumnInt (d:int[][]) (i:int) = </div><div class="line">    <span class="keyword">new</span> IntRange(</div><div class="line">        d |&gt; Array.map (<span class="keyword">fun</span> r -&gt; r.[i]) |&gt; Array.min,</div><div class="line">        d |&gt; Array.map (<span class="keyword">fun</span> r -&gt; r.[i]) |&gt; Array.max)</div><div class="line"></div><div class="line"><span class="keyword">let</span> newDecisionVariableFromColumnInt (d:int[][]) (i:int) =</div><div class="line">    <span class="keyword">new</span> DecisionVariable((sprintf <span class="string">"col%d"</span> i), newRangeFromColumnInt d i)</div><div class="line"></div><div class="line"><span class="keyword">let</span> decisionVariablesInt (inputs:int[][]) = </div><div class="line">    [<span class="number">0.</span>.(Array.length inputs.[<span class="number">0</span>])<span class="number">-1</span>] </div><div class="line">    |&gt; List.map (newDecisionVariableFromColumnInt inputs)</div><div class="line"></div><div class="line"><span class="keyword">let</span> decisionVariablesIListInt (inputs:int[][]) = </div><div class="line">    <span class="keyword">let</span> variableList = <span class="keyword">new</span> Collections.Generic.List&lt;DecisionVariable&gt;()</div><div class="line">    decisionVariablesInt inputs |&gt; List.iter (<span class="keyword">fun</span> x -&gt; variableList.Add(x))</div><div class="line">    variableList</div><div class="line"></div><div class="line"><span class="keyword">let</span> inputsInt i = </div><div class="line">    (Array.map (<span class="keyword">fun</span> x -&gt; Array.map (<span class="keyword">fun</span> y -&gt; int(y * <span class="number">100.</span>)) x) i)</div><div class="line">    </div><div class="line"><span class="keyword">let</span> treeId3 = <span class="keyword">new</span> DecisionTree(decisionVariablesIListInt (inputsInt trainInputs), numClasses (Array.map int trainOutputs))</div><div class="line"></div><div class="line"><span class="keyword">let</span> id3 = <span class="keyword">new</span> ID3Learning(treeId3)</div><div class="line"></div><div class="line">id3.ParallelOptions.MaxDegreeOfParallelism &lt;- <span class="number">1</span></div><div class="line"><span class="keyword">let</span> errorId3 = id3.Learn((inputsInt trainInputs), (Array.map int trainOutputs))</div><div class="line"></div><div class="line"><span class="keyword">let</span> (trainResultsId3, trainTotalCorrectId3) = processResultsId3 treeId3 (inputsInt trainInputs) (Array.map int trainOutputs)    </div><div class="line"><span class="keyword">let</span> (testResultsId3, testTotalCorrectId3) = processResultsId3 treeId3 (inputsInt testInputs) (Array.map int testOutputs)</div><div class="line"></div><div class="line">showResults <span class="string">"Train"</span> trainTotalCorrectId3 (Array.length trainInputs)</div><div class="line">showResults <span class="string">"Test "</span> testTotalCorrectId3 (Array.length testInputs)</div></pre></td></tr></table></figure>
+<p>Although the end results were anticlimatic, it’s nice to see it all come together.  One consolation is with over 100 possible themes, 41% on the test set isn’t the worst thing in the world.  Hopefully this has offered some insight into how to use a decision tree in Accord.NET.  Until next time…</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://beitzel.org/2016/12/07/Decision-Trees-with-F-and-Accord-NET-Part-2/" data-id="ciwedowqq0000uolil3wjsez2" class="article-share-link">Share</a>
+      <a data-url="http://beitzel.org/2016/12/07/Decision-Trees-with-F-and-Accord-NET-Part-2/" data-id="ciwedowqq0000uolil3wjsez2" class="article-share-link">Partager</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Accord-NET/">Accord.NET</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Data/">Data</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Decision-Trees/">Decision Trees</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/F/">F#</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Legos/">Legos</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Machine-Learning/">Machine Learning</a></li></ul>
@@ -137,7 +140,7 @@ ga('send', 'pageview');
   
   
     <a href="/2016/12/05/Decision-Trees-with-F-and-Accord-NET-Part-1/" id="article-nav-older" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Older</strong>
+      <strong class="article-nav-caption">Ancien</strong>
       <div class="article-nav-title">Decision Trees with F# and Accord.NET (Part 1)</div>
     </a>
   
@@ -152,7 +155,7 @@ ga('send', 'pageview');
   
     
   <div class="widget-wrap">
-    <h3 class="widget-title">Tag Cloud</h3>
+    <h3 class="widget-title">Nuage de mot-clés</h3>
     <div class="widget tagcloud">
       <a href="/tags/Accord-NET/" style="font-size: 20px;">Accord.NET</a> <a href="/tags/Computer-Vision/" style="font-size: 10px;">Computer Vision</a> <a href="/tags/Data/" style="font-size: 13.33px;">Data</a> <a href="/tags/Decision-Trees/" style="font-size: 13.33px;">Decision Trees</a> <a href="/tags/F/" style="font-size: 20px;">F#</a> <a href="/tags/Images/" style="font-size: 13.33px;">Images</a> <a href="/tags/Legos/" style="font-size: 13.33px;">Legos</a> <a href="/tags/Machine-Learning/" style="font-size: 16.67px;">Machine Learning</a>
     </div>
@@ -177,7 +180,7 @@ ga('send', 'pageview');
   <div class="outer">
     <div id="footer-info" class="inner">
       &copy; 2016 Beitzel.org<br>
-      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+      Propulsé by <a href="http://hexo.io/" target="_blank">Hexo</a>
     </div>
   </div>
 </footer>
